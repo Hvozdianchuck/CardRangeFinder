@@ -56,22 +56,18 @@ public class CardRangeServiceImpl implements CardRangeService, ApplicationListen
         String suffix = cardNumber.substring(12);
 
         String minCardNumber = prefix + "000000" + suffix + "000";
-        String maxCardNumber = prefix + "999999" + suffix + "000";
 
         BigDecimal minValue = new BigDecimal(minCardNumber);
-        BigDecimal maxValue = new BigDecimal(maxCardNumber);
 
         List<CardInfoDto> cardInfoList =
-                cardRangeRepository.findCardInfoByMinAndMaxPossibleCardNumber(minValue, maxValue,
-                        isMainTableActiveForRead);
+                cardRangeRepository.findCardInfoByMinAndMaxPossibleCardNumber(minValue, isMainTableActiveForRead);
         if (cardInfoList.size() > 1) {
             throw new MoreThanOneRangeException("There are more than one card range available");
         }
         return cardInfoList.get(0);
     }
 
-
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 * * * *")
     public void scheduledUpdateCardRanges() {
         isMainTableActiveForWrite = !isMainTableActiveForWrite;
         updateCardRanges();

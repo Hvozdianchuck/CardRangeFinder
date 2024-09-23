@@ -30,8 +30,7 @@ public class CardRangeRepositoryImpl implements CardRangeRepository {
 
     @Transactional(readOnly = true)
     @Override
-    public List<CardInfoDto> findCardInfoByMinAndMaxPossibleCardNumber(BigDecimal minCardNumber,
-                                                                       BigDecimal maxCardNumber, boolean isMain) {
+    public List<CardInfoDto> findCardInfoByMinAndMaxPossibleCardNumber(BigDecimal minCardNumber, boolean isMain) {
         String tableName = isMain ? mainTable : cardInfoShadow;
         String sql = String.format(
                 "SELECT bin, alpha_code, bank_name FROM %s WHERE min_range <= ? AND max_range >= ?", tableName
