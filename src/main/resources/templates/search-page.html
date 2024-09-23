@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Range Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #databaseStatus {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: red;
+            display: none; /* Сховати за замовчуванням */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Card Range Finder</h2>
+
+    <div id="databaseStatus">База даних оновлюється. Спробуйте пізніше.</div>
+
+    <form id="cardForm">
+        <input type="text" id="cardInput" placeholder="Введіть номер картки" required>
+        <button type="submit" id="searchButton">Пошук</button>
+    </form>
+
+    <table id="cardTable">
+        <thead>
+        <tr>
+            <th>Card Prefix</th>
+            <th>Issuer</th>
+            <th>Type</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Тут будуть додаватися рядки з даними -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.getElementById('cardForm').onsubmit = function (event) {
+        event.preventDefault(); // Запобігаємо перезавантаженню сторінки
+
+        const card = document.getElementById('cardInput').value;
+        const requestBody = { card: card }; // Створюємо об'єкт запиту
+
+        fetch('/cart-ranges', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message); // Викидаємо помилку з повідомленням
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('databaseStatus').style.display = 'none'; // Сховати повідомлення про базу
+                populateTable([data]);
+            })
+            .catch(error => {
+                if (error.message=="Database is updating now. Please wait 15 seconds." || error.message=="Invalid card number format" ||
+                    error.message=="There are more than one card range available"){
+                    document.getElementById('databaseStatus').innerText = error.message
+                    document.getElementById('databaseStatus').style.display = 'block';
+                } else {
+                    document.getElementById('databaseStatus').innerText = "Something wrong!"
+                    document.getElementById('databaseStatus').style.display = 'block';
+                }
+            });
+    };
+
+    function populateTable(data) {
+        const tbody = document.querySelector('#cardTable tbody');
+        tbody.innerHTML = '';
+
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.bin}</td>
+                <td>${item.alphaCode}</td>
+                <td>${item.bankName}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+</script>
+
+</body>
+</html>
